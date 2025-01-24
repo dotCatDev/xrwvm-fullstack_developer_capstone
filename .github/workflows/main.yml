@@ -19,29 +19,41 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8
-    - name: Print working directory
-      run: pwd
+        pip install flake8 autopep8
+    - name: Run Auto Formatter (AutoPep8)
+      run: |
+        # This will attempt to fix Python formatting issues
+        autopep8 --in-place --aggressive --recursive .
+        echo "AutoPep8 applied to Python files."
     - name: Run Linter
       run: |
-        pwd
         # This command finds all Python files recursively and runs flake8 on them
         find . -name "*.py" -exec flake8 {} +
-        echo "Linted all the python files successfully"
+        echo "Linted all the Python files successfully"
+
   lint_js:
-      name: Lint JavaScript Files
-      runs-on: ubuntu-latest
-      steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-      - name: Install Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 14
-      - name: Install JSHint
-        run: npm install jshint --global
-      - name: Run Linter
-        run: |
-          # This command finds all JavaScript files recursively and runs JSHint on them
-          find ./server/database -name "*.js" -exec jshint {} +
-          echo "Linted all the js files successfully"
+    name: Lint JavaScript Files
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 14
+    - name: Install ESLint
+      run: npm install eslint --global
+    - name: Run Auto Formatter (ESLint)
+      run: |
+        # Initialize ESLint config if it doesn't exist
+        if [ ! -f .eslintrc.json ]; then
+          eslint --init --yes
+        fi
+        # Run ESLint with auto-fix enabled
+        eslint ./server/database --ext .js --fix
+        echo "ESLint auto-fixes applied to JavaScript files."
+    - name: Run Linter
+      run: |
+        # Run ESLint to report remaining issues
+        eslint ./server/database --ext .js
+        echo "Linted all the JS files successfully"
